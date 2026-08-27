@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# Environment & Secret Files
+.env
+.env.production
+!.env.example
+
+# Database & Generated Files
+backend/data/qualivision.db
+backend/data/qualivision.db-journal
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads & Generated Heatmaps (keep directory structure via .gitkeep if needed)
+backend/data/uploads/*
+!backend/data/uploads/.gitkeep
+backend/data/heatmaps/*
+!backend/data/heatmaps/.gitkeep
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
