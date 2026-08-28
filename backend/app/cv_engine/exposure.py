@@ -2,15 +2,6 @@ import cv2
 import numpy as np
 
 def compute_exposure_metrics(bgr_img: np.ndarray, gray_img: np.ndarray) -> dict:
-    """
-    Computes exposure metrics:
-    - Mean and median luminance (L-channel of LAB color space)
-    - Luminance standard deviation (contrast indicator)
-    - Shadow clipping ratio (% pixels with luminance < 15)
-    - Highlight clipping ratio (% pixels with luminance > 240)
-    - Dynamic Range (difference between 99th and 1st percentile luminance)
-    - Underexposure & Overexposure indicators and exposure quality score (0-100)
-    """
     if gray_img is None or gray_img.size == 0:
         return {
             "mean_luminance": 0.0,
@@ -25,31 +16,26 @@ def compute_exposure_metrics(bgr_img: np.ndarray, gray_img: np.ndarray) -> dict:
             "exposure_state": "INVALID"
         }
 
-    # Convert to LAB for perceptual luminance
     lab_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2LAB)
-    l_channel = lab_img[:, :, 0].astype(np.float64) # range 0..255 in OpenCV
+    l_channel = lab_img[:, :, 0].astype(np.float64)
 
     total_pixels = l_channel.size
     mean_lum = float(np.mean(l_channel))
     median_lum = float(np.median(l_channel))
     std_lum = float(np.std(l_channel))
 
-    # Clipping percentages
     shadow_count = float(np.sum(l_channel < 15.0))
     highlight_count = float(np.sum(l_channel > 240.0))
 
     shadow_pct = shadow_count / total_pixels
     highlight_pct = highlight_count / total_pixels
 
-    # Dynamic Range
     p1, p99 = np.percentile(l_channel, [1, 99])
     dynamic_range = float(p99 - p1)
 
-    # Classification logic
     is_underexposed = (mean_lum < 55.0 and shadow_pct > 0.15) or (shadow_pct > 0.35)
     is_overexposed = (mean_lum > 200.0 and highlight_pct > 0.15) or (highlight_pct > 0.30)
 
-    # Ideal mean luminance is ~110-150 with low clipping
     lum_penalty = abs(mean_lum - 128.0) / 128.0
     clip_penalty = (shadow_pct + highlight_pct) * 2.0
     

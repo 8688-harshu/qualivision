@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { SlidersHorizontal, Eye, Flame } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { SlidersHorizontal, Eye } from 'lucide-react';
 
 export default function ImageSlider({ originalUrl, heatmapUrl }) {
   const [sliderPosition, setSliderPosition] = useState(50);
@@ -11,95 +11,115 @@ export default function ImageSlider({ originalUrl, heatmapUrl }) {
     const rect = containerRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     let percentage = (x / rect.width) * 100;
-    percentage = Math.max(0, Math.min(100, percentage));
+    percentage = Math.max(15, Math.min(85, percentage));
     setSliderPosition(percentage);
   };
 
-  const handleTouchMove = (e) => {
-    if (isDragging) {
-      handleMove(e.touches[0].clientX);
-    }
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    handleMove(e.clientX);
   };
 
-  const handleMouseMove = (e) => {
-    if (isDragging) {
-      handleMove(e.clientX);
-    }
+  const handleTouchStart = (e) => {
+    setIsDragging(true);
+    handleMove(e.touches[0].clientX);
   };
+
+  useEffect(() => {
+    const handleMouseUp = () => setIsDragging(false);
+    const handleMouseMove = (e) => {
+      if (isDragging) {
+        handleMove(e.clientX);
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (isDragging) {
+        handleMove(e.touches[0].clientX);
+      }
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('touchend', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isDragging]);
 
   return (
-    <div className="glass-card rounded-2xl p-4 space-y-3">
-      <div className="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider px-1">
+    <div className="clean-panel p-4 space-y-3 bg-white">
+      <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
         <div className="flex items-center space-x-2">
-          <Eye className="w-4 h-4 text-cyan-400" />
-          <span>Visual Defect Overlay & Heatmap</span>
+          <Eye className="w-4 h-4 text-indigo-600" />
+          <span>Dynamic Resizable Split View</span>
         </div>
-        <div className="flex items-center space-x-4 text-slate-400 text-xs font-normal">
+        <div className="flex items-center space-x-4 text-slate-500 text-xs">
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />
-            <span>Original</span>
+            <span className="w-2 h-2 rounded-full bg-indigo-600 inline-block" />
+            <span>Original ({Math.round(sliderPosition)}%)</span>
           </span>
           <span className="flex items-center space-x-1">
             <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
-            <span>Heatmap Overlay</span>
+            <span>Heatmap ({Math.round(100 - sliderPosition)}%)</span>
           </span>
         </div>
       </div>
 
       <div
         ref={containerRef}
-        className="relative w-full h-[380px] rounded-xl overflow-hidden select-none cursor-ew-resize border border-slate-800"
-        onMouseDown={() => setIsDragging(true)}
-        onMouseUp={() => setIsDragging(false)}
-        onMouseLeave={() => setIsDragging(false)}
-        onMouseMove={handleMouseMove}
-        onTouchStart={() => setIsDragging(true)}
-        onTouchEnd={() => setIsDragging(false)}
-        onTouchMove={handleTouchMove}
+        className="relative w-full h-[380px] rounded-lg overflow-hidden select-none cursor-ew-resize border border-slate-200 bg-slate-950 flex touch-none"
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
       >
-        {/* Underneath Layer: Quality Heatmap */}
-        {heatmapUrl ? (
-          <img
-            src={heatmapUrl}
-            alt="Quality Degradation Heatmap Overlay"
-            className="absolute inset-0 w-full h-full object-contain bg-slate-950"
-          />
-        ) : (
-          <img
-            src={originalUrl}
-            alt="Original Upload"
-            className="absolute inset-0 w-full h-full object-contain bg-slate-950"
-          />
-        )}
-
-        {/* Top Layer: Original Image (Clipped by slider position) */}
         <div
-          className="absolute inset-0 overflow-hidden"
+          className="h-full relative overflow-hidden bg-slate-900 flex flex-col items-center justify-center p-2 border-r border-slate-800"
           style={{ width: `${sliderPosition}%` }}
         >
+          <div className="absolute top-2 left-2 bg-slate-900/90 text-white px-2 py-0.5 rounded text-[10px] font-bold z-10 border border-slate-700">
+            Original ({Math.round(sliderPosition)}%)
+          </div>
           <img
             src={originalUrl}
             alt="Original Upload"
-            className="absolute inset-0 w-full h-full object-contain bg-slate-950"
-            style={{ width: containerRef.current ? `${containerRef.current.clientWidth}px` : '100%' }}
+            className="max-w-full max-h-full object-contain"
           />
         </div>
 
-        {/* Slider Handle Divider Line */}
         <div
-          className="absolute top-0 bottom-0 w-1 bg-cyan-400 shadow-lg shadow-cyan-500/50 cursor-ew-resize"
-          style={{ left: `${sliderPosition}%` }}
+          className="absolute top-0 bottom-0 w-1 bg-indigo-600 cursor-ew-resize z-20"
+          style={{ left: `calc(${sliderPosition}% - 2px)` }}
         >
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center shadow-xl shadow-cyan-500/40">
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md border-2 border-white">
             <SlidersHorizontal className="w-4 h-4" />
           </div>
         </div>
 
-        {/* Interactive Helper Pill */}
-        <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-lg border border-slate-800 text-[11px] text-slate-300 pointer-events-none">
-          Drag handle to compare Original vs Defect Heatmap
+        <div
+          className="h-full relative overflow-hidden bg-slate-900 flex flex-col items-center justify-center p-2"
+          style={{ width: `${100 - sliderPosition}%` }}
+        >
+          <div className="absolute top-2 right-2 bg-slate-900/90 text-white px-2 py-0.5 rounded text-[10px] font-bold z-10 border border-slate-700">
+            Heatmap ({Math.round(100 - sliderPosition)}%)
+          </div>
+          <img
+            src={heatmapUrl || originalUrl}
+            alt="Quality Degradation Heatmap Overlay"
+            className="max-w-full max-h-full object-contain"
+          />
         </div>
       </div>
+
+      <p className="text-[11px] text-slate-500 text-center font-medium">
+        Drag the center divider handle left or right to dynamically resize and compare both images.
+      </p>
     </div>
   );
 }

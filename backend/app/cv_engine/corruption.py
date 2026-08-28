@@ -3,22 +3,12 @@ import numpy as np
 from PIL import Image, ImageFile
 import io
 
-# Allow truncated image reading to test corruption detection
 ImageFile.LOAD_TRUNCATED_IMAGES = False
 
 def compute_corruption_metrics(image_bytes: bytes, bgr_img: np.ndarray, gray_img: np.ndarray) -> dict:
-    """
-    Evaluates image structural corruption:
-    - Byte & file header validation
-    - PIL & OpenCV decode status
-    - Shannon entropy anomalies (<1.0 or extreme uniform flatline/noise)
-    - Macroblock JPEG grid artifact boundary ratio
-    - NaN / Inf pixel detection
-    """
     is_corrupt = False
     corruption_reasons = []
 
-    # 1. Byte Stream Check
     if not image_bytes or len(image_bytes) < 100:
         return {
             "entropy": 0.0,
@@ -29,15 +19,13 @@ def compute_corruption_metrics(image_bytes: bytes, bgr_img: np.ndarray, gray_img
             "corruption_score": 0.0
         }
 
-    # 2. PIL Validation
     try:
         pil_img = Image.open(io.BytesIO(image_bytes))
-        pil_img.verify() # Verify file header and integrity
+        pil_img.verify()
     except Exception as e:
         is_corrupt = True
         corruption_reasons.append(f"Image header/decode verification failed: {str(e)}")
 
-    # 3. OpenCV Decode Check
     if bgr_img is None or gray_img is None or gray_img.size == 0:
         is_corrupt = True
         corruption_reasons.append("OpenCV matrix decode returned empty or null frame")
@@ -50,15 +38,11 @@ def compute_corruption_metrics(image_bytes: bytes, bgr_img: np.ndarray, gray_img
             "corruption_score": 0.0
         }
 
-    # 4. NaN / Inf check
     nan_inf_count = int(np.sum(np.isnan(gray_img)) + np.sum(np.isinf(gray_img)))
     if nan_inf_count > 0:
         is_corrupt = True
         corruption_reasons.append(f"Contains {nan_inf_count} invalid NaN/Inf pixel values")
 
-    # 5. Shannon Entropy
-    # Normal natural images have entropy between 4.0 and 7.8.
-    # Uniform black/white images or byte corruption patterns have abnormal entropy (<1.5 or pure random high noise flatline).
     hist, _ = np.histogram(gray_img.flatten(), bins=256, range=(0, 256))
     prob = hist / np.sum(hist)
     prob = prob[prob > 0]
@@ -68,7 +52,6 @@ def compute_corruption_metrics(image_bytes: bytes, bgr_img: np.ndarray, gray_img
         is_corrupt = True
         corruption_reasons.append(f"Abnormally low pixel entropy ({round(entropy, 2)}) - blank or corrupted payload")
 
-    # 6. JPEG Blockiness / Grid Artifact Index
     h, w = gray_img.shape
     if h >= 16 and w >= 16:
         g1 = gray_img[:, 7::8].astype(np.float64)
@@ -92,7 +75,6 @@ def compute_corruption_metrics(image_bytes: bytes, bgr_img: np.ndarray, gray_img
         is_corrupt = True
         corruption_reasons.append(f"Severe JPEG macroblock corruption (Blockiness index {round(blockiness_index, 2)})")
 
-    # Corruption score (100 = uncorrupted, 0 = fully corrupted)
     corruption_score = 0.0 if is_corrupt else float(np.clip(100.0 - (blockiness_index - 1.0) * 10.0, 0.0, 100.0))
 
     return {

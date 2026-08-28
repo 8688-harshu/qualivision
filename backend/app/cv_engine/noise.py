@@ -2,13 +2,6 @@ import cv2
 import numpy as np
 
 def compute_noise_metrics(gray_img: np.ndarray) -> dict:
-    """
-    Computes noise metrics:
-    - Estimated noise standard deviation using median filtering residual
-    - Signal-to-Noise Ratio (SNR) in dB
-    - High-frequency noise energy
-    - Noise level score (0-100, where 100 means noise-free)
-    """
     if gray_img is None or gray_img.size == 0:
         return {
             "noise_std": 0.0,
@@ -20,27 +13,19 @@ def compute_noise_metrics(gray_img: np.ndarray) -> dict:
 
     img_float = gray_img.astype(np.float64)
 
-    # 1. Estimate noise via Median Filter Residual
-    # Median filter preserves edges while smoothing impulse & Gaussian noise
     denoised = cv2.medianBlur(gray_img, 3).astype(np.float64)
     noise_residual = img_float - denoised
     
-    # Robust MAE estimation of noise standard deviation (Donoha & Johnstone estimate)
-    # sigma = median(|residual|) / 0.6745
     abs_residual = np.abs(noise_residual)
     median_abs = float(np.median(abs_residual))
     noise_std = median_abs / 0.6745 if median_abs > 0 else float(np.std(noise_residual))
 
-    # 2. Signal-to-Noise Ratio (SNR)
     signal_power = np.mean(denoised ** 2) + 1e-8
     noise_power = (noise_std ** 2) + 1e-8
     snr_db = float(10.0 * np.log10(signal_power / noise_power))
 
-    # 3. High-Frequency Noise Energy (Laplacian on residual)
     hf_noise_energy = float(np.std(cv2.Laplacian(noise_residual, cv2.CV_64F)))
 
-    # 4. Noise Score (0 - 100, higher is cleaner)
-    # noise_std < 3.0 is clean, > 15.0 is heavily noisy
     penalty = np.clip((noise_std - 2.5) / 20.0, 0.0, 1.0)
     noise_score = float(np.clip(100.0 * (1.0 - penalty), 0.0, 100.0))
 

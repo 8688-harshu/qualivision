@@ -26,7 +26,6 @@ def test_model_info_endpoint():
     assert "confusion_matrix" in data
 
 def test_analyze_image_endpoint():
-    # Create test synthetic image
     img = np.zeros((300, 400, 3), dtype=np.uint8)
     cv2.circle(img, (200, 150), 50, (0, 255, 0), -1)
     _, img_bytes = cv2.imencode(".jpg", img)

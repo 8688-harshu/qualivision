@@ -26,9 +26,6 @@ FEATURE_NAMES = [
 ]
 
 def extract_feature_vector(cv_results: dict) -> np.ndarray:
-    """
-    Converts CV engine metrics dictionary into a 22-dimensional numerical feature vector for ML model.
-    """
     s = cv_results.get("sharpness", {})
     e = cv_results.get("exposure", {})
     n = cv_results.get("noise", {})

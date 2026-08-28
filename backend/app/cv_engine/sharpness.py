@@ -2,14 +2,6 @@ import cv2
 import numpy as np
 
 def compute_sharpness_metrics(gray_img: np.ndarray) -> dict:
-    """
-    Computes comprehensive sharpness and blur metrics:
-    - Laplacian Variance (classic blur detection metric)
-    - Tenengrad Gradient Index (Sobel gradient magnitude mean)
-    - Brenner Gradient Index
-    - FFT High-Frequency Power Ratio
-    Returns normalized sharpness score (0-100) and detailed quantitative stats.
-    """
     if gray_img is None or gray_img.size == 0:
         return {
             "laplacian_var": 0.0,
@@ -20,29 +12,24 @@ def compute_sharpness_metrics(gray_img: np.ndarray) -> dict:
             "is_blurry": True
         }
     
-    # 1. Laplacian Variance
     laplacian = cv2.Laplacian(gray_img, cv2.CV_64F)
     lap_var = float(np.var(laplacian))
 
-    # 2. Tenengrad Gradient Index
     sobelx = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0, ksize=3)
     sobely = cv2.Sobel(gray_img, cv2.CV_64F, 0, 1, ksize=3)
     tenengrad = float(np.mean(sobelx**2 + sobely**2))
 
-    # 3. Brenner Index
     if gray_img.shape[0] > 2 and gray_img.shape[1] > 2:
         diff_x = (gray_img[:, 2:].astype(np.float64) - gray_img[:, :-2].astype(np.float64)) ** 2
         brenner = float(np.mean(diff_x))
     else:
         brenner = 0.0
 
-    # 4. FFT High Frequency Power Ratio
     h, w = gray_img.shape
     f = np.fft.fft2(gray_img.astype(np.float64))
     fshift = np.fft.fftshift(f)
     magnitude_spectrum = np.abs(fshift)
     
-    # Center radius
     cy, cx = h // 2, w // 2
     radius = min(h, w) // 8
     
@@ -54,9 +41,6 @@ def compute_sharpness_metrics(gray_img: np.ndarray) -> dict:
     high_freq_power = total_power - low_freq_power
     fft_hf_ratio = float(high_freq_power / total_power)
 
-    # 5. Calculate Normalized Sharpness Score (0 - 100)
-    # Typically Laplacian variance < 100 is blurry, > 500 is sharp
-    # Sigmoidal mapping for smooth 0-100 scaling
     norm_lap = np.clip(lap_var / 350.0, 0, 2.0)
     norm_ten = np.clip(tenengrad / 1200.0, 0, 2.0)
     norm_fft = np.clip(fft_hf_ratio / 0.8, 0, 1.5)

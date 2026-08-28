@@ -8,7 +8,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_recall_fscore_support
 
-# Ensure backend modules can be imported
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.cv_engine import run_full_cv_analysis
@@ -34,7 +33,6 @@ def train_and_evaluate():
     if not os.path.exists(DATASET_DIR):
         generate_synthetic_dataset()
 
-    print("Extracting features from dataset images...")
     X = []
     y = []
     categories = os.listdir(DATASET_DIR)
@@ -67,9 +65,6 @@ def train_and_evaluate():
     X = np.array(X)
     y = np.array(y)
 
-    print(f"Dataset extracted: {X.shape[0]} samples with {X.shape[1]} features.")
-
-    # Train/Test Split
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
 
     clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
@@ -82,7 +77,6 @@ def train_and_evaluate():
     prec, rec, f1, _ = precision_recall_fscore_support(y_test, y_pred, average='weighted')
     cm = confusion_matrix(y_test, y_pred).tolist()
 
-    # Feature Importance Ranking
     importances = clf.feature_importances_
     feat_imp = [
         {"feature": FEATURE_NAMES[i], "importance": round(float(importances[i]), 4)}
@@ -104,19 +98,11 @@ def train_and_evaluate():
         "feature_importances": feat_imp
     }
 
-    # Save Model Weights & Metrics
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
     joblib.dump({"model": clf, "feature_names": FEATURE_NAMES}, MODEL_PATH)
 
     with open(METRICS_PATH, "w") as f:
         json.dump(metrics, f, indent=2)
-
-    print("\n--- Training Results ---")
-    print(f"Accuracy: {metrics['accuracy'] * 100:.2f}%")
-    print(f"F1-Score: {metrics['f1_score']:.4f}")
-    print(f"5-Fold CV Accuracy: {metrics['cv_mean_accuracy'] * 100:.2f}%")
-    print(f"Saved model to: {MODEL_PATH}")
-    print(f"Saved metrics to: {METRICS_PATH}")
 
     return metrics
 

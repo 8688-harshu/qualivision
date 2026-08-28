@@ -3,9 +3,9 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 class QualityIssue(BaseModel):
-    type: str = Field(..., example="noise")
-    severity: str = Field(..., example="low") # low, medium, high, critical
-    confidence: float = Field(..., example=0.71)
+    type: str = Field(...)
+    severity: str = Field(...)
+    confidence: float = Field(...)
     description: Optional[str] = None
 
 class AnalysisResultResponse(BaseModel):

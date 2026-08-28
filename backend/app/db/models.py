@@ -15,12 +15,11 @@ class ImageAnalysis(Base):
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
 
-    quality_score = Column(Integer, nullable=False) # 0 to 100
-    quality_label = Column(String(50), nullable=False) # ACCEPTABLE, DEGRADED, DEFECTIVE
+    quality_score = Column(Integer, nullable=False)
+    quality_label = Column(String(50), nullable=False)
 
-    # JSON stored fields
-    issues = Column(JSON, nullable=False) # List of issue dicts
-    cv_metrics = Column(JSON, nullable=False) # Detailed CV quantitative metrics
-    explainability = Column(JSON, nullable=False) # Model decision breakdown
+    issues = Column(JSON, nullable=False)
+    cv_metrics = Column(JSON, nullable=False)
+    explainability = Column(JSON, nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

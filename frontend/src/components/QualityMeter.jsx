@@ -1,73 +1,61 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, AlertOctagon } from 'lucide-react';
 
 export default function QualityMeter({ score, label }) {
-  // Score colors & styling
-  let strokeColor = '#10b981'; // Emerald (Acceptable)
-  let badgeBg = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 glow-emerald';
-  let Icon = CheckCircle2;
+  let strokeColor = '#059669';
+  let badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
   if (label === 'DEGRADED') {
-    strokeColor = '#f59e0b'; // Amber
-    badgeBg = 'bg-amber-500/10 text-amber-400 border-amber-500/30 glow-amber';
-    Icon = AlertTriangle;
+    strokeColor = '#d97706';
+    badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
   } else if (label === 'DEFECTIVE') {
-    strokeColor = '#f43f5e'; // Crimson
-    badgeBg = 'bg-rose-500/10 text-rose-400 border-rose-500/30 glow-rose';
-    Icon = AlertOctagon;
+    strokeColor = '#e11d48';
+    badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
   }
 
-  // SVG Gauge stroke parameters
-  const radius = 64;
+  const radius = 56;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      
-      {/* Circular Gauge */}
-      <div className="relative w-44 h-44 flex items-center justify-center">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
+    <div className="flex flex-col items-center justify-center p-2">
+      <div className="relative w-36 h-36 flex items-center justify-center">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 140 140">
           <circle
-            cx="80"
-            cy="80"
+            cx="70"
+            cy="70"
             r={radius}
             stroke="currentColor"
-            strokeWidth="12"
-            className="text-slate-800"
+            strokeWidth="10"
+            className="text-slate-200"
             fill="transparent"
           />
           <circle
-            cx="80"
-            cy="80"
+            cx="70"
+            cy="70"
             r={radius}
             stroke={strokeColor}
-            strokeWidth="12"
+            strokeWidth="10"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             fill="transparent"
-            className="transition-all duration-1000 ease-out"
+            className="transition-all duration-700 ease-out"
           />
         </svg>
 
-        {/* Center Score Text */}
         <div className="absolute flex flex-col items-center justify-center text-center">
-          <span className="text-4xl font-extrabold text-slate-100 tracking-tighter">
+          <span className="text-3xl font-bold text-slate-900">
             {score}
           </span>
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-0.5">
-            / 100 Score
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+            Score / 100
           </span>
         </div>
       </div>
 
-      {/* Quality Label Badge */}
-      <div className={`mt-4 px-4 py-1.5 rounded-full border flex items-center space-x-2 text-sm font-bold tracking-wide uppercase ${badgeBg}`}>
-        <Icon className="w-4 h-4" />
-        <span>{label}</span>
+      <div className={`mt-3 px-3 py-1 rounded border text-xs font-semibold tracking-wider uppercase ${badgeClass}`}>
+        {label}
       </div>
-
     </div>
   );
 }

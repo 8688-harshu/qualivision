@@ -6,9 +6,6 @@ from .defects import compute_defect_metrics
 from .heatmap import generate_quality_heatmap
 
 def run_full_cv_analysis(bgr_img, gray_img, raw_bytes: bytes) -> dict:
-    """
-    Runs complete suite of computer vision metrics and returns aggregated dictionary.
-    """
     sharpness = compute_sharpness_metrics(gray_img)
     exposure = compute_exposure_metrics(bgr_img, gray_img)
     noise = compute_noise_metrics(gray_img)

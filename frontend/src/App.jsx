@@ -9,14 +9,13 @@ import ExplainabilityView from './components/ExplainabilityView';
 import HistoryTable from './components/HistoryTable';
 import ModelMetricsView from './components/ModelMetricsView';
 import { analyzeImage } from './services/api';
-import { RefreshCw, Sparkles, Layers, Sliders, ChevronRight } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('evaluator');
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeViewTab, setActiveViewTab] = useState('slider'); // 'slider', 'stats', 'explain'
+  const [activeViewTab, setActiveViewTab] = useState('slider');
 
   const handleFileSelected = async (file) => {
     setIsLoading(true);
@@ -36,13 +35,11 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      // Create synthetic canvas image matching preset for instant testing
       const canvas = document.createElement('canvas');
       canvas.width = 500;
       canvas.height = 400;
       const ctx = canvas.getContext('2d');
 
-      // Draw background pattern
       const grad = ctx.createLinearGradient(0, 0, 0, 400);
       grad.addColorStop(0, '#0f172a');
       grad.addColorStop(1, '#0284c7');
@@ -57,11 +54,10 @@ export default function App() {
       ctx.fillStyle = '#38bdf8';
       ctx.fillRect(280, 120, 140, 100);
 
-      ctx.font = '20px sans-serif';
+      ctx.font = '18px sans-serif';
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(`QualiVision Preset: ${presetKey.toUpperCase()}`, 30, 370);
+      ctx.fillText(`Preset: ${presetKey.toUpperCase()}`, 30, 370);
 
-      // Apply synthetic degradation based on key
       if (presetKey === 'blurry') {
         ctx.filter = 'blur(12px)';
         ctx.drawImage(canvas, 0, 0);
@@ -72,7 +68,6 @@ export default function App() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         ctx.fillRect(0, 0, 500, 400);
       } else if (presetKey === 'defective') {
-        // Draw artificial scratches & dust spots
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -90,7 +85,6 @@ export default function App() {
         const file = new File([blob], `preset_${presetKey}.jpg`, { type: 'image/jpeg' });
         await handleFileSelected(file);
       }, 'image/jpeg');
-
     } catch (err) {
       setError(err.message || 'Preset evaluation failed');
       setIsLoading(false);
@@ -103,86 +97,67 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      
-      {/* Header Navigation */}
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        {/* Error Alert */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {error && (
-          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-4 rounded-2xl flex items-center justify-between text-sm">
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-lg flex items-center justify-between text-xs font-medium">
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="text-xs font-semibold hover:underline">
+            <button onClick={() => setError(null)} className="font-semibold hover:underline">
               Dismiss
             </button>
           </div>
         )}
 
-        {/* Tab 1: Analysis Hub */}
         {activeTab === 'evaluator' && (
-          <div className="space-y-8">
-            
-            {/* Upload Zone & Samples */}
+          <div className="space-y-6">
             <UploadZone
               onFileSelected={handleFileSelected}
               isLoading={isLoading}
               onSelectPreset={handleSelectPreset}
             />
 
-            {/* Analysis Loading Indicator */}
             {isLoading && (
-              <div className="glass-panel rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin" />
+              <div className="clean-panel p-10 text-center flex flex-col items-center justify-center space-y-3 bg-white">
+                <div className="w-10 h-10 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
                 <div>
-                  <h3 className="text-lg font-bold text-slate-100">Evaluating Image Quality</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Extracting Laplacian sharpness, luminance clipping, noise residuals, defect contours & ML inference...
+                  <h3 className="text-sm font-bold text-slate-900">Evaluating Image Quality</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Extracting sharpness, exposure, noise, surface defect metrics, and ML inference...
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Analysis Dashboard Result */}
             {analysisResult && !isLoading && (
               <div className="space-y-6">
-                
-                {/* Top Banner: Score + Issue List */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  
-                  {/* Gauge Meter Panel */}
-                  <div className="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-800">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="clean-panel p-5 flex flex-col items-center justify-center border border-slate-200 bg-white">
                     <QualityMeter
                       score={analysisResult.quality_score}
                       label={analysisResult.quality_label}
                     />
 
-                    <div className="w-full pt-4 mt-2 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between px-2">
-                      <span>Filename: <strong className="text-slate-200">{analysisResult.filename}</strong></span>
+                    <div className="w-full pt-3 mt-2 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between font-medium">
+                      <span>File: <strong className="text-slate-900">{analysisResult.filename}</strong></span>
                       <span>{analysisResult.width}x{analysisResult.height} px</span>
                     </div>
                   </div>
 
-                  {/* Issues List Panel */}
-                  <div className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-slate-800">
+                  <div className="lg:col-span-2 clean-panel p-5 border border-slate-200 bg-white">
                     <IssueList issues={analysisResult.issues} />
                   </div>
-
                 </div>
 
-                {/* Bottom View Switcher: Slider vs Stats vs Explainability */}
-                <div className="space-y-4">
-                  
-                  {/* View Tab Selector */}
-                  <div className="flex space-x-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 max-w-md">
+                <div className="space-y-3">
+                  <div className="flex space-x-1 bg-slate-200/80 p-1 rounded-lg border border-slate-300/60 max-w-md">
                     <button
                       onClick={() => setActiveViewTab('slider')}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 py-1.5 rounded text-xs font-semibold transition-colors ${
                         activeViewTab === 'slider'
-                          ? 'bg-cyan-500 text-slate-950 shadow-md'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Heatmap Comparison
@@ -190,10 +165,10 @@ export default function App() {
 
                     <button
                       onClick={() => setActiveViewTab('stats')}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 py-1.5 rounded text-xs font-semibold transition-colors ${
                         activeViewTab === 'stats'
-                          ? 'bg-cyan-500 text-slate-950 shadow-md'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Quantitative Stats
@@ -201,17 +176,16 @@ export default function App() {
 
                     <button
                       onClick={() => setActiveViewTab('explain')}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`flex-1 py-1.5 rounded text-xs font-semibold transition-colors ${
                         activeViewTab === 'explain'
-                          ? 'bg-cyan-500 text-slate-950 shadow-md'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Model Explainability
                     </button>
                   </div>
 
-                  {/* Tab Views */}
                   {activeViewTab === 'slider' && (
                     <ImageSlider
                       originalUrl={analysisResult.original_image_url}
@@ -226,34 +200,26 @@ export default function App() {
                   {activeViewTab === 'explain' && (
                     <ExplainabilityView explainability={analysisResult.explainability} />
                   )}
-
                 </div>
-
               </div>
             )}
-
           </div>
         )}
 
-        {/* Tab 2: Analysis History */}
         {activeTab === 'history' && (
           <HistoryTable onSelectAnalysis={handleSelectHistoryItem} />
         )}
 
-        {/* Tab 3: Model Insights */}
         {activeTab === 'model' && (
           <ModelMetricsView />
         )}
-
       </main>
 
-      {/* Footer */}
-      <footer className="glass-panel border-t border-slate-800/80 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-          QualiVision AI &copy; 2026 - Automated Computer Vision & Machine Learning Image Quality Evaluation System
+      <footer className="border-t border-slate-200 bg-white py-4 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 font-medium">
+          QualiVision AI - Automated Computer Vision & Machine Learning Image Quality Evaluation
         </div>
       </footer>
-
     </div>
   );
 }

@@ -7,7 +7,6 @@ from app.config import settings
 from app.db.database import engine, Base
 from app.api.routes import router as api_router
 
-# Initialize Database Tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -18,7 +17,6 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs",
 )
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,12 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Static File Directories
 app.mount("/static/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 app.mount("/static/heatmaps", StaticFiles(directory=settings.HEATMAP_DIR), name="heatmaps")
 app.mount("/static/samples", StaticFiles(directory=settings.SAMPLES_DIR), name="samples")
 
-# Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")

@@ -15,24 +15,18 @@ class QualityModelEvaluator:
             try:
                 data = joblib.load(MODEL_FILE)
                 self.model = data.get("model")
-            except Exception as e:
-                print(f"Warning: Failed to load trained model: {e}")
+            except Exception:
+                pass
 
     def predict(self, cv_metrics: dict) -> dict:
-        """
-        Runs ML prediction and heuristic quality rule engine.
-        Returns structured analysis result complying with prompt specs.
-        """
         feat_vec = extract_feature_vector(cv_metrics).reshape(1, -1)
 
-        # 1. Base Score calculation from CV sub-scores
         sharpness_score = cv_metrics["sharpness"]["sharpness_score"]
         exposure_score = cv_metrics["exposure"]["exposure_score"]
         noise_score = cv_metrics["noise"]["noise_score"]
         corruption_score = cv_metrics["corruption"]["corruption_score"]
         defect_score = cv_metrics["defects"]["defect_score"]
 
-        # Weighted quality score
         quality_score = float(
             0.25 * sharpness_score +
             0.20 * exposure_score +
@@ -41,11 +35,9 @@ class QualityModelEvaluator:
             0.15 * corruption_score
         )
 
-        # 2. ML Classifier Prediction
         if self.model is not None:
             try:
                 probs = self.model.predict_proba(feat_vec)[0]
-                # Label 0: ACCEPTABLE, Label 1: DEGRADED, Label 2: DEFECTIVE
                 pred_label_idx = int(np.argmax(probs))
                 confidence = float(probs[pred_label_idx])
             except Exception:
@@ -55,7 +47,6 @@ class QualityModelEvaluator:
             pred_label_idx = 0 if quality_score >= 75 else (1 if quality_score >= 45 else 2)
             confidence = 0.80
 
-        # Adjust score and label based on severe hard limits
         is_corrupt = cv_metrics["corruption"]["is_corrupt"]
         has_defects = cv_metrics["defects"]["has_defects"]
 
@@ -70,10 +61,8 @@ class QualityModelEvaluator:
 
         quality_score = float(np.clip(quality_score, 0.0, 100.0))
 
-        # 3. Identify Specific Image Quality Issues
         issues = []
         
-        # Blur / Sharpness Issue
         if cv_metrics["sharpness"]["is_blurry"]:
             lap_var = cv_metrics["sharpness"]["laplacian_var"]
             severity = "critical" if lap_var < 50 else ("high" if lap_var < 90 else "medium")
@@ -85,7 +74,6 @@ class QualityModelEvaluator:
                 "description": f"Insufficient sharpness detected (Laplacian variance: {lap_var}, score: {sharpness_score}/100)"
             })
 
-        # Exposure Issues
         exp_state = cv_metrics["exposure"]["exposure_state"]
         if exp_state == "UNDEREXPOSED":
             shadow_pct = cv_metrics["exposure"]["shadow_clipping_pct"]
@@ -108,7 +96,6 @@ class QualityModelEvaluator:
                 "description": f"Image is overexposed with {highlight_pct}% highlight clipping"
             })
 
-        # Noise Issue
         if cv_metrics["noise"]["is_noisy"]:
             noise_std = cv_metrics["noise"]["noise_std"]
             severity = "critical" if noise_std > 20 else ("high" if noise_std > 12 else "medium")
@@ -120,7 +107,6 @@ class QualityModelEvaluator:
                 "description": f"High image noise detected (Residual std: {noise_std}, SNR: {cv_metrics['noise']['snr_db']} dB)"
             })
 
-        # Visual Defect Issue
         if cv_metrics["defects"]["has_defects"]:
             defect_cnt = cv_metrics["defects"]["defect_count"]
             area_pct = cv_metrics["defects"]["defect_area_pct"]
@@ -132,7 +118,6 @@ class QualityModelEvaluator:
                 "description": f"Visual surface defects detected ({defect_cnt} regions, {area_pct}% of total image area)"
             })
 
-        # Corruption Issue
         if is_corrupt:
             reasons = ", ".join(cv_metrics["corruption"]["reasons"])
             issues.append({
@@ -142,7 +127,6 @@ class QualityModelEvaluator:
                 "description": f"Severe image corruption or decoding anomaly ({reasons})"
             })
 
-        # 4. Explainability & Feature Contribution Breakdown
         explainability = {
             "model_confidence": round(confidence, 2),
             "decision_factors": [
