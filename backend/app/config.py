@@ -7,10 +7,13 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     BASE_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    DATABASE_URL: str = f"sqlite:///{os.path.join(BASE_DIR, 'data', 'qualivision.db')}"
     
-    UPLOAD_DIR: str = os.path.join(BASE_DIR, "data", "uploads")
-    HEATMAP_DIR: str = os.path.join(BASE_DIR, "data", "heatmaps")
+    DATA_ROOT: str = "/tmp" if os.environ.get("VERCEL") else os.path.join(BASE_DIR, "data")
+    
+    DATABASE_URL: str = f"sqlite:///{os.path.join(DATA_ROOT, 'qualivision.db')}"
+    
+    UPLOAD_DIR: str = os.path.join(DATA_ROOT, "uploads")
+    HEATMAP_DIR: str = os.path.join(DATA_ROOT, "heatmaps")
     SAMPLES_DIR: str = os.path.join(BASE_DIR, "data", "samples")
     
     MAX_UPLOAD_SIZE_MB: int = 15
