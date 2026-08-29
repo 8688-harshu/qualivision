@@ -63,8 +63,9 @@ app.include_router(api_router, prefix="")
 def root():
     return {
         "status": "healthy",
-        "name": settings.PROJECT_NAME,
+        "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
+        "ml_model_loaded": (evaluator_instance.model is not None or evaluator_instance.np_trees is not None),
         "docs_url": f"{settings.API_V1_STR}/docs",
         "health_check": f"{settings.API_V1_STR}/health"
     }
@@ -73,8 +74,9 @@ def root():
 def api_root():
     return {
         "status": "healthy",
-        "name": settings.PROJECT_NAME,
+        "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
+        "ml_model_loaded": (evaluator_instance.model is not None or evaluator_instance.np_trees is not None),
         "docs_url": f"{settings.API_V1_STR}/docs",
         "health_check": f"{settings.API_V1_STR}/health"
     }

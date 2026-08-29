@@ -22,18 +22,18 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "destination": "/api"
     },
     {
       "source": "/api",
-      "destination": "/api/index.py"
+      "destination": "/api"
     },
     {
       "source": "/static/(.*)",
-      "destination": "/api/index.py"
+      "destination": "/api"
     },
     {
-      "source": "/((?!api/|static/).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
