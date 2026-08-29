@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load .env file from project root directory
 backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -8,6 +8,13 @@ root_dir = os.path.abspath(os.path.join(backend_dir, ".."))
 load_dotenv(os.path.join(root_dir, ".env"))
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
     PROJECT_NAME: str = "QualiVision AI API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
@@ -26,12 +33,6 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 15
     CORS_ORIGINS: str = "*"
     SECRET_KEY: str = "qualivision-ai-secret-key-change-in-production"
-
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
 
     def model_post_init(self, __context):
         is_vercel = bool(os.environ.get("VERCEL"))

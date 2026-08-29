@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -9,6 +9,8 @@ class QualityIssue(BaseModel):
     description: Optional[str] = None
 
 class AnalysisResultResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     filename: str
     original_image_url: str
@@ -22,9 +24,6 @@ class AnalysisResultResponse(BaseModel):
     cv_metrics: Dict[str, Any]
     explainability: Dict[str, Any]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class PaginatedAnalysisResponse(BaseModel):
     total: int
