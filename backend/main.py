@@ -7,7 +7,10 @@ from app.config import settings
 from app.db.database import engine, Base
 from app.api.routes import router as api_router
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception:
+    pass
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -25,12 +28,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-if os.path.exists(settings.UPLOAD_DIR):
-    app.mount("/static/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
-if os.path.exists(settings.HEATMAP_DIR):
-    app.mount("/static/heatmaps", StaticFiles(directory=settings.HEATMAP_DIR), name="heatmaps")
-if os.path.exists(settings.SAMPLES_DIR):
-    app.mount("/static/samples", StaticFiles(directory=settings.SAMPLES_DIR), name="samples")
+for dir_path, mount_path, name in [
+    (settings.UPLOAD_DIR, "/static/uploads", "uploads"),
+    (settings.HEATMAP_DIR, "/static/heatmaps", "heatmaps"),
+    (settings.SAMPLES_DIR, "/static/samples", "samples")
+]:
+    try:
+        os.makedirs(dir_path, exist_ok=True)
+        app.mount(mount_path, StaticFiles(directory=dir_path, check_dir=False), name=name)
+    except Exception:
+        pass
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(api_router, prefix="/v1")
@@ -43,6 +50,17 @@ app.include_router(api_router, prefix="")
 @app.get("/")
 def root():
     return {
+        "status": "healthy",
+        "name": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "docs_url": f"{settings.API_V1_STR}/docs",
+        "health_check": f"{settings.API_V1_STR}/health"
+    }
+
+@app.get("/api")
+def api_root():
+    return {
+        "status": "healthy",
         "name": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "docs_url": f"{settings.API_V1_STR}/docs",

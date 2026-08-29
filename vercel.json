@@ -3,8 +3,19 @@
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/index.py": {
-      "includeFiles": "{backend/app/**,backend/main.py,backend/scripts/metrics.json}",
-      "excludeFiles": "{**/*.pyc,**/__pycache__/**,**/*.db,**/*.sqlite,backend/tests/**,backend/data/**}",
+      "includeFiles": [
+        "backend/app/**",
+        "backend/main.py",
+        "backend/scripts/metrics.json"
+      ],
+      "excludeFiles": [
+        "**/*.pyc",
+        "**/__pycache__/**",
+        "**/*.db",
+        "**/*.sqlite",
+        "backend/tests/**",
+        "backend/data/**"
+      ],
       "maxDuration": 30
     }
   },

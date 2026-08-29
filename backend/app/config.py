@@ -34,8 +34,9 @@ class Settings(BaseSettings):
         extra = "ignore"
 
     def model_post_init(self, __context):
+        is_vercel = bool(os.environ.get("VERCEL"))
         if not self.DATA_ROOT:
-            self.DATA_ROOT = "/tmp" if os.environ.get("VERCEL") else os.path.join(self.BASE_DIR, "data")
+            self.DATA_ROOT = "/tmp" if is_vercel else os.path.join(self.BASE_DIR, "data")
         if not self.DATABASE_URL:
             self.DATABASE_URL = f"sqlite:///{os.path.join(self.DATA_ROOT, 'qualivision.db')}"
         if not self.UPLOAD_DIR:
@@ -43,12 +44,17 @@ class Settings(BaseSettings):
         if not self.HEATMAP_DIR:
             self.HEATMAP_DIR = os.path.join(self.DATA_ROOT, "heatmaps")
         if not self.SAMPLES_DIR:
-            self.SAMPLES_DIR = os.path.join(self.BASE_DIR, "data", "samples")
+            self.SAMPLES_DIR = os.path.join(self.DATA_ROOT, "samples") if is_vercel else os.path.join(self.BASE_DIR, "data", "samples")
 
 settings = Settings()
 
-os.makedirs(os.path.dirname(settings.DATABASE_URL.replace("sqlite:///", "")), exist_ok=True)
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-os.makedirs(settings.HEATMAP_DIR, exist_ok=True)
-os.makedirs(settings.SAMPLES_DIR, exist_ok=True)
+try:
+    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+    if db_path:
+        os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    os.makedirs(settings.HEATMAP_DIR, exist_ok=True)
+    os.makedirs(settings.SAMPLES_DIR, exist_ok=True)
+except Exception:
+    pass
 
