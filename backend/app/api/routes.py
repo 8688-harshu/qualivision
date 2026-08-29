@@ -23,7 +23,8 @@ async def analyze_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    ext = os.path.splitext(file.filename)[1].lower()
+    filename = file.filename or "unknown.jpg"
+    ext = os.path.splitext(filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -81,7 +82,7 @@ async def analyze_image(
 
     db_record = ImageAnalysis(
         id=file_id,
-        filename=file.filename,
+        filename=filename,
         original_image_url=original_url,
         heatmap_image_url=heatmap_url,
         file_size_bytes=len(raw_bytes),
