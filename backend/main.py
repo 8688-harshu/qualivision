@@ -28,6 +28,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.requests import Request
+
+@app.middleware("http")
+async def vercel_path_rewrite_middleware(request: Request, call_next):
+    matched_path = request.headers.get("x-matched-path")
+    if matched_path:
+        request.scope["path"] = matched_path
+    elif request.scope.get("path", "").startswith("/api/index.py"):
+        sub_path = request.scope["path"][len("/api/index.py"):]
+        request.scope["path"] = sub_path if sub_path.startswith("/") else ("/" + sub_path)
+    return await call_next(request)
+
 for dir_path, mount_path, name in [
     (settings.UPLOAD_DIR, "/static/uploads", "uploads"),
     (settings.HEATMAP_DIR, "/static/heatmaps", "heatmaps"),
