@@ -1,22 +1,23 @@
-const API_BASE_URL = '/api/v1';
+export const BACKEND_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '');
+export const API_BASE_URL = BACKEND_URL ? `${BACKEND_URL}/api/v1` : '/api/v1';
+
+export function getFullImageUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  return BACKEND_URL ? `${BACKEND_URL}${cleanPath}` : cleanPath;
+}
 
 export async function analyzeImage(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}/analyze`, {
-      method: 'POST',
-      body: formData,
-    });
-  } catch (err) {
-    // If relative fails or network drops, try root /api/analyze fallback
-    response = await fetch('/api/analyze', {
-      method: 'POST',
-      body: formData,
-    });
-  }
+  const response = await fetch(`${API_BASE_URL}/analyze`, {
+    method: 'POST',
+    body: formData,
+  });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -60,7 +61,12 @@ export async function deleteAnalysis(id) {
 }
 
 export async function fetchHealthStatus() {
-  const endpoints = ['/api/v1/health', '/api/health', '/health', '/api'];
+  const endpoints = [
+    `${API_BASE_URL}/health`,
+    BACKEND_URL ? `${BACKEND_URL}/health` : '/health',
+    BACKEND_URL ? `${BACKEND_URL}/api` : '/api',
+  ];
+
   for (const url of endpoints) {
     try {
       const response = await fetch(url);
@@ -78,17 +84,15 @@ export async function fetchHealthStatus() {
 }
 
 export async function fetchModelInfo() {
-  const endpoints = ['/api/v1/model-info', '/api/model-info'];
-  for (const url of endpoints) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch {
-      // Try next
+  try {
+    const response = await fetch(`${API_BASE_URL}/model-info`);
+    if (response.ok) {
+      return await response.json();
     }
+  } catch {
+    // fallback
   }
+
   return {
     accuracy: 0.952,
     precision: 0.948,

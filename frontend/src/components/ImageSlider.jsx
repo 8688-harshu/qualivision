@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal, Eye } from 'lucide-react';
+import { getFullImageUrl } from '../services/api';
 
 export default function ImageSlider({ originalUrl, heatmapUrl }) {
+  const fullOrigUrl = getFullImageUrl(originalUrl);
+  const fullHeatmapUrl = getFullImageUrl(heatmapUrl);
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
@@ -87,7 +90,7 @@ export default function ImageSlider({ originalUrl, heatmapUrl }) {
             Original ({Math.round(sliderPosition)}%)
           </div>
           <img
-            src={originalUrl}
+            src={fullOrigUrl}
             alt="Original Upload"
             className="max-w-full max-h-full object-contain"
           />
@@ -110,7 +113,7 @@ export default function ImageSlider({ originalUrl, heatmapUrl }) {
             Heatmap ({Math.round(100 - sliderPosition)}%)
           </div>
           <img
-            src={heatmapUrl || originalUrl}
+            src={fullHeatmapUrl || fullOrigUrl}
             alt="Quality Degradation Heatmap Overlay"
             className="max-w-full max-h-full object-contain"
           />

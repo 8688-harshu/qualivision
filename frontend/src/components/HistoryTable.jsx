@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Trash2, Eye, Calendar, HardDrive, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchAnalyses, deleteAnalysis } from '../services/api';
+import { fetchAnalyses, deleteAnalysis, getFullImageUrl } from '../services/api';
 
 export default function HistoryTable({ onSelectAnalysis }) {
   const [data, setData] = useState({ total: 0, page: 1, limit: 8, analyses: [] });
@@ -123,7 +123,7 @@ export default function HistoryTable({ onSelectAnalysis }) {
               <div>
                 <div className="relative h-36 bg-slate-900 overflow-hidden border-b border-slate-200">
                   <img
-                    src={item.original_image_url}
+                    src={getFullImageUrl(item.original_image_url)}
                     alt={item.filename}
                     className="w-full h-full object-cover"
                   />
