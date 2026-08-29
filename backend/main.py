@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.db.database import engine, Base
 from app.api.routes import router as api_router
+from app.ml_engine.model import evaluator_instance
 
 try:
     Base.metadata.create_all(bind=engine)
