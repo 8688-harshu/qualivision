@@ -25,11 +25,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
-app.mount("/static/heatmaps", StaticFiles(directory=settings.HEATMAP_DIR), name="heatmaps")
-app.mount("/static/samples", StaticFiles(directory=settings.SAMPLES_DIR), name="samples")
+if os.path.exists(settings.UPLOAD_DIR):
+    app.mount("/static/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+if os.path.exists(settings.HEATMAP_DIR):
+    app.mount("/static/heatmaps", StaticFiles(directory=settings.HEATMAP_DIR), name="heatmaps")
+if os.path.exists(settings.SAMPLES_DIR):
+    app.mount("/static/samples", StaticFiles(directory=settings.SAMPLES_DIR), name="samples")
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix="/v1")
+app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 def root():

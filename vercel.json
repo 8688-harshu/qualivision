@@ -16,10 +16,12 @@
   "routes": [
     {
       "src": "/api/(.*)",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       "dest": "api/index.py"
     },
     {
       "src": "/static/(.*)",
+      "methods": ["GET", "POST", "HEAD", "OPTIONS"],
       "dest": "api/index.py"
     },
     {
