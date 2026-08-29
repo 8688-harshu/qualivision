@@ -155,7 +155,7 @@ def health_check():
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "ml_model_loaded": evaluator_instance.model is not None
+        "ml_model_loaded": (evaluator_instance.model is not None or evaluator_instance.np_trees is not None)
     }
 
 @router.get("/model-info")

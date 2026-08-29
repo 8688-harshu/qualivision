@@ -1,22 +1,70 @@
 import os
-import joblib
 import numpy as np
 from app.ml_engine.feature_extractor import extract_feature_vector, FEATURE_NAMES
 
+WEIGHTS_FILE = os.path.join(os.path.dirname(__file__), "model_weights.npz")
 MODEL_FILE = os.path.join(os.path.dirname(__file__), "model.joblib")
 
 class QualityModelEvaluator:
     def __init__(self):
         self.model = None
+        self.np_trees = None
         self.load_model()
 
     def load_model(self):
+        if os.path.exists(WEIGHTS_FILE):
+            try:
+                npz = np.load(WEIGHTS_FILE, allow_pickle=True)
+                self.np_trees = {
+                    "children_left": npz["children_left"],
+                    "children_right": npz["children_right"],
+                    "feature": npz["feature"],
+                    "threshold": npz["threshold"],
+                    "value": npz["value"]
+                }
+                return
+            except Exception:
+                pass
+
         if os.path.exists(MODEL_FILE):
             try:
+                import joblib
                 data = joblib.load(MODEL_FILE)
                 self.model = data.get("model")
             except Exception:
                 pass
+
+    def _predict_proba_numpy(self, X: np.ndarray) -> np.ndarray:
+        cl = self.np_trees["children_left"]
+        cr = self.np_trees["children_right"]
+        feat = self.np_trees["feature"]
+        th = self.np_trees["threshold"]
+        val = self.np_trees["value"]
+        
+        n_trees = len(cl)
+        n_classes = val[0].shape[1] if len(val[0].shape) > 1 else len(val[0])
+        tree_probs = np.zeros((n_trees, n_classes), dtype=np.float64)
+        
+        for t in range(n_trees):
+            node = 0
+            t_cl = cl[t]
+            t_cr = cr[t]
+            t_feat = feat[t]
+            t_th = th[t]
+            t_val = val[t]
+            
+            while t_cl[node] != -1:
+                f_idx = t_feat[node]
+                thresh = t_th[node]
+                if X[0, f_idx] <= thresh:
+                    node = t_cl[node]
+                else:
+                    node = t_cr[node]
+            node_dist = t_val[node]
+            total = np.sum(node_dist)
+            tree_probs[t] = node_dist / (total if total > 0 else 1.0)
+            
+        return np.mean(tree_probs, axis=0)
 
     def predict(self, cv_metrics: dict) -> dict:
         feat_vec = extract_feature_vector(cv_metrics).reshape(1, -1)
@@ -35,17 +83,23 @@ class QualityModelEvaluator:
             0.15 * corruption_score
         )
 
-        if self.model is not None:
+        confidence = 0.85
+        pred_label_idx = 0 if quality_score >= 75 else (1 if quality_score >= 45 else 2)
+
+        if self.np_trees is not None:
+            try:
+                probs = self._predict_proba_numpy(feat_vec)
+                pred_label_idx = int(np.argmax(probs))
+                confidence = float(probs[pred_label_idx])
+            except Exception:
+                pass
+        elif self.model is not None:
             try:
                 probs = self.model.predict_proba(feat_vec)[0]
                 pred_label_idx = int(np.argmax(probs))
                 confidence = float(probs[pred_label_idx])
             except Exception:
-                pred_label_idx = 0 if quality_score >= 75 else (1 if quality_score >= 45 else 2)
-                confidence = 0.85
-        else:
-            pred_label_idx = 0 if quality_score >= 75 else (1 if quality_score >= 45 else 2)
-            confidence = 0.80
+                pass
 
         is_corrupt = cv_metrics["corruption"]["is_corrupt"]
         has_defects = cv_metrics["defects"]["has_defects"]
