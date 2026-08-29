@@ -35,6 +35,10 @@ if os.path.exists(settings.SAMPLES_DIR):
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(api_router, prefix="/v1")
 app.include_router(api_router, prefix="/api")
+app.include_router(api_router, prefix="/api/index.py")
+app.include_router(api_router, prefix="/api/index.py/api/v1")
+app.include_router(api_router, prefix="/api/index.py/v1")
+app.include_router(api_router, prefix="")
 
 @app.get("/")
 def root():
