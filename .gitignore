@@ -28,6 +28,8 @@ frontend/dist-ssr/
 # Database & Generated Files
 backend/data/qualivision.db
 backend/data/qualivision.db-journal
+backend/data/dataset/
+backend/data/dataset/*
 *.db
 *.sqlite
 *.sqlite3
@@ -37,6 +39,8 @@ backend/data/uploads/*
 !backend/data/uploads/.gitkeep
 backend/data/heatmaps/*
 !backend/data/heatmaps/.gitkeep
+backend/data/samples/*
+!backend/data/samples/.gitkeep
 
 # IDEs & Editors
 .vscode/
